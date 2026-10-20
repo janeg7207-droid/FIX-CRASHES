@@ -1,98 +1,82 @@
-GORILLA MOD MANAGER 26 v2.0.4 - CRASH AND CAK CHECKS ADD-ON v1.1
-===========================================================
+GORILLA MOD MANAGER 26 v2.0.4 - INTEGRATED CAK CHECKS r2
+=====================================================
 
-DOWNLOAD WITHDRAWN: Microsoft Defender reported Trojan:Win32/Ulthar.A!ml in
-Gorilla CAK Inspector.exe. Do not run or allow the flagged build. The instructions
-below describe its intended workflow and are suspended pending security review.
-See ANTIVIRUS-REPORT.md in the repository. No clean replacement is validated.
-
-This is a modified copy of the supplied v2.0.4 package, not an official update.
-The original mod manager features, original artwork, and original reader files
-are retained. Original author: Mr Creeper HD. See README.original.txt.
-
-INSTALL AND USE
+SECURITY STATUS
 ---------------
-1. Extract this entire package to a NEW folder. Keep your old package as a backup.
-2. Keep Gorilla Mod Manager 26.exe, GorillaCrashDetails.dll, GorillaReader.dll
+The earlier package was flagged by Microsoft Defender as Trojan:Win32/Ulthar.A!ml
+in Gorilla CAK Inspector.exe. This revision completely removes that standalone
+program and its build project. Existing CAK checks remain inside the manager.
+This is a functional/package revision, not a confirmed malware-free build or a
+Microsoft false-positive verdict. Read ANTIVIRUS-STATUS.txt for actual scan status.
+Keep antivirus protection enabled. If this build is flagged, leave it blocked;
+do not allow it or add an exclusion. The earlier package remains withdrawn.
+
+This is an unofficial modified copy of the supplied v2.0.4 package. Original
+author: Mr Creeper HD. Original mod management, TRIBUTE, Discovery, backup,
+restore and update code are retained. See README.original.txt.
+
+USE THE INTEGRATED CHECKS
+-------------------------
+1. Let your antivirus inspect the new download. Continue only if it allows it.
+2. Extract to a NEW folder. Do not copy files over the withdrawn build.
+3. Keep Gorilla Mod Manager 26.exe, GorillaCrashDetails.dll, GorillaReader.dll
    and GorillaReader.runtimeconfig.json together. The new DLL is required.
-3. Start Gorilla Mod Manager 26.exe on Windows.
-4. Keep the manager open while playing WWE 2K26. After a failure, open
-   FIX MY GAME and press CHECK AGAIN after Windows has written its event record.
-5. Read the new "Latest recorded crash" or "Latest recorded freeze" card.
-   It explains what happened, the evidence, confidence, and what to try next.
-6. Click OPEN FOLDER on that card for Latest crash report.txt.
-   Reports are stored in a "Crash Reports" subfolder of Gorilla's data folder.
-   Only the latest report is retained. Save a separate copy if you need history.
+4. Open the manager on Windows, then FIX MY GAME > CHECK AGAIN.
+5. CAK file inspection reads enabled, top-level .cak files in the configured
+   mods folder. Use the existing Add a Mod page for installation. Disabled
+   files and subfolders are excluded from the automatic inspection.
+6. Read the crash explanation, CAK file cards, shared asset IDs and any quoted
+   CakeHook messages. OPEN FOLDER on the crash card opens a saved local report.
 
-READ AND CHECK A CAK
--------------------
-- FIX MY GAME > CHECK AGAIN automatically inspects enabled, top-level .cak
-  files in the configured mods folder. Disabled files/subfolders are excluded.
-  CAK results are included in Latest crash report.txt.
-- Before installing a file, start Gorilla CAK Inspector.exe and choose a .cak,
-  drop a file onto the window, or drop it onto the Inspector executable.
-  Keep GorillaCrashDetails.dll beside this tool. SAVE REPORT saves its findings.
-- This reads actual FDIR headers and, for supported plaintext formats, file and
-  directory tables, names, asset IDs, chunk metadata and payload bounds. It can
-  identify an empty/incomplete file, an archive renamed to .cak, broken table
-  references, truncated payloads and enabled CAKs sharing asset IDs.
-- Shared assets can be intentional replacements. An overlap is not a proven
-  conflict or crash cause. Compare runs with mods disabled and restored.
-- If present, CakeHook messages mentioning an exact filename are quoted from
-  its last marked log session. Stale logs are flagged. A filename mention may
-  describe a successful load and is not automatically treated as a failure.
-- Plaintext layouts supported: 6.7, 6.8, 8.1, 8.2, 8.3, 8.7, 9.1, 9.2, 9.3.
-  Encrypted metadata and other versions (including 9.9) are marked LIMITED;
-  their archive contents/integrity are NOT validated. That is not corruption.
-- Asset compression, encrypted payloads, model/texture semantics, checksums and
-  exact game compatibility are not validated. A structurally readable CAK can
-  still be incompatible or contain a bad asset. This tool cannot promise to
-  identify the exact bad asset or mod without further evidence.
-- Inspection limits: 32 MiB metadata and 100,000 entries per archive. Automatic
-  scanning considers at most 256 archives and 200,000 distinct asset IDs; up to
-  20 file cards and 12 overlap cards are shown. Limits are reported explicitly.
-  The inspector never extracts, edits, deletes or disables the CAK.
-- Format research credit: Nenkai/Bakery. See THIRD-PARTY-NOTICES.txt.
+There is no standalone CAK Inspector in this revision. No separate executable
+is required for the integrated checks. A file outside the configured mods
+folder is not automatically inspected.
 
-The report is saved locally only. It may contain your Windows user name in
-file paths; review it before sharing it. This add-on does not upload reports,
-delete files, disable mods automatically, or change game settings.
+WHAT IS CHECKED
+----------------
+- Windows crash/hang time, faulting component, exception code and offset,
+  when Windows supplies them, with confidence and suggested next checks.
+- Actual FDIR CAK bytes and supported plaintext file/directory tables, names,
+  asset IDs, chunk metadata and payload bounds. This can expose empty files,
+  incorrect extensions, broken tables, invalid references and truncated data.
+- Shared asset IDs between enabled CAKs. These can be intentional replacements;
+  an overlap is a lead, not proof of a conflict or crash cause.
+- CakeHook messages mentioning the filename, when present, from the last marked
+  session. Stale logs are flagged. A filename mention may be a successful load.
 
-WHAT IT CAN TELL YOU
--------------------
-- When Windows recorded the failure, the faulting component and its path.
-- The exception code and offset, when Windows supplies them.
-- A plain-language explanation of access violations, heap corruption, fail-fast,
-  missing components, allocation failures, graphics device errors and other
-  common failures. Freezes are distinguished from exception crashes.
-- Plugin and graphics leads, with the limits of that evidence stated clearly.
-- The existing mod suspects and checks, with the existing controls preserved.
+Plaintext formats supported: 6.7, 6.8, 8.1, 8.2, 8.3, 8.7, 9.1, 9.2, 9.3.
+Encrypted metadata and other versions, including 9.9, are marked LIMITED.
+Their entries/integrity are NOT validated. Encryption or an unsupported version
+does not prove corruption. Checksums, compressed/encrypted asset contents,
+model/texture correctness and exact game compatibility are not validated.
 
-A crash inside a plugin is a useful lead, not proof that the plugin created the
-original fault. A Windows DLL name or an access violation cannot identify an
-individual bad mod. If there is not enough evidence, the report says the cause
-is unknown and explains the next check instead of inventing a cause.
+Inspection limits: 32 MiB metadata and 100,000 entries per CAK; 256 enabled
+archives and 200,000 distinct asset IDs in an automatic scan. Up to 20 file
+cards and 12 overlap cards are shown. Reaching a limit is reported explicitly.
+The check never extracts, edits, deletes or disables a CAK.
 
-Old records are marked historical. If Windows logs cannot be read, or no matching
-event exists, that is explained rather than reported as a healthy game.
+If evidence is insufficient, the report says the cause is unknown. A crash
+inside a plugin, an access violation or a shared Windows DLL cannot by itself
+identify which mod introduced the underlying fault. Use repeated comparable
+tests and the existing backup/restore controls to investigate a suspect.
+
+LOCAL REPORTS
+---------------
+The latest report is saved in Crash Reports/Latest crash report.txt under
+Gorilla's data folder. It is saved locally only and may contain personal file
+paths. Review it before sharing. Only the latest report is retained.
 
 REQUIREMENTS AND LIMITS
-----------------------
-- Windows with .NET Framework 4.8 for the original desktop application.
-- The original GorillaReader helper targets .NET 10; install Microsoft's x64
-  .NET 10 Runtime if the reader reports that it is missing. Use the official
-  Microsoft .NET download site: https://dotnet.microsoft.com/download/dotnet/10.0
-- A WWE 2K26 installation and relevant Windows Application event records.
-- No WWE game or Windows desktop is available in the Linux build environment.
-  The diagnostic logic, CAK parser/fixtures, report integration, preserved
-  code/resources, and changed/new IL were checked. Both Windows interfaces and
-  a real game crash still need testing. Your particular CAK has not been supplied
-  or examined in this build environment.
-- This add-on patches the provided v2.0.4 binary only. A later official update
-  may replace the patched executable and remove the add-on's report hook.
-  Do not apply this patch to a different executable version.
+------------------------
+- Windows with .NET Framework 4.8 for the original desktop app and add-on.
+- The original GorillaReader helper targets .NET 10. If that runtime is missing,
+  obtain Microsoft's x64 .NET 10 Runtime from the official Microsoft download site:
+  https://dotnet.microsoft.com/download/dotnet/10.0
+- A WWE 2K26 installation and available Windows Application event records.
+- This Linux build environment cannot run Microsoft Defender, the Windows UI or
+  WWE 2K26. Functional and package checks do not establish malware safety.
+- Your particular CAK has not been supplied or examined here.
+- This patch accepts only the exact uploaded v2.0.4 executable. An official
+  update may replace the report hook and requires a separately reviewed patch.
 
-RETURN TO THE ORIGINAL
-----------------------
-Close the manager and launch the original package you kept. The add-on changes
-no game/mod files. Its only saved data is the local crash-report text file.
+Format research credit: Nenkai/Bakery. See THIRD-PARTY-NOTICES.txt.

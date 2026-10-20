@@ -1,0 +1,8 @@
+MICROSOFT DEFENDER: NOT RUN. No Microsoft malware classification/review is available.
+The previously flagged standalone Gorilla CAK Inspector.exe has been removed.
+Removal of that component does not establish that the remaining package is safe.
+ANTIVIRUS SCAN: NOT RUN. No scanner with usable virus definitions was supplied to this build.
+
+Archive antivirus scan: NOT RUN.
+
+Local scan setup observation: ClamAV 1.4.3 engine obtained from signed Debian package indices. Official database download failed with proxy CONNECT 403 at database.clamav.net. No usable virus database was available, and no malware scan was completed.

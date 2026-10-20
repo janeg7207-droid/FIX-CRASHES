@@ -92,14 +92,14 @@ namespace Gorilla.CrashDetails
                         Folder = folder
                     });
                 string text = files.Count == 0
-                    ? "No enabled .cak files were found directly in the configured mods folder. Use Add a Mod to install one, or open Gorilla CAK Inspector.exe to choose a file before installing it. Disabled files and subfolders are not scanned here."
+                    ? "No enabled .cak files were found directly in the configured mods folder. Use the existing Add a Mod page to add a CAK, then return here and press Check Again. Disabled files and subfolders are not scanned here."
                     : "Read " + files.Count + " enabled CAK file(s): " + tablesRead + " supported archive table(s) read, " + errors + " file(s) with structural/read problems, " + limited + " with limited inspection.\n\n" + list;
                 text += "\n\n" + loader.Status;
                 text += "\n\nThis scan reads CAK bytes and supported file/directory tables; it does not just check filenames or sizes. Shared asset IDs are leads, not proof of a conflict. Encrypted tables, unsupported versions and compressed asset contents are not validated. A clean structural scan does not prove that a mod works in WWE 2K26.";
                 if (limitedFiles || limitedHashes || overlaps.Count > 12)
-                    text += "\n\nScan limits reached: at most 256 archives, 200,000 distinct asset IDs and 12 overlap cards are shown. Additional files/overlaps are unverified. Use the standalone CAK Inspector for a particular file.";
+                    text += "\n\nScan limits reached: at most 256 archives, 200,000 distinct asset IDs and 12 overlap cards are shown. Additional files/overlaps are unverified. The saved report identifies inspected files; files beyond the limits need separate investigation.";
                 text += "\n\nOnly enabled, top-level .cak files in the configured mods folder are scanned. No CAK is changed, extracted, deleted or switched off by this check.";
-                if (detailed == 20) text += "\n\nFile-specific cards are limited to 20. Check the summary's file list and use the standalone CAK Inspector for any file without its own card.";
+                if (detailed == 20) text += "\n\nFile-specific cards are limited to 20. Check the summary's file list for files whose full details are not shown.";
                 report.Findings.Add(new Finding { Id = "gorilla-cak-summary", Title = "CAK file inspection", Text = text, Folder = Directory.Exists(folder) ? folder : null });
                 report.Looked.Add("CAK inspection: " + files.Count + " file(s), " + tablesRead + " supported table(s), " + errors + " problem file(s)");
                 if (errors > 0)
@@ -110,7 +110,7 @@ namespace Gorilla.CrashDetails
             }
             catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException || ex is ArgumentException || ex is NotSupportedException || ex is System.Security.SecurityException)
             {
-                report.Findings.Add(new Finding { Id = "gorilla-cak-unavailable", Title = "CAK folder inspection could not finish", Text = "No file validity is claimed. " + ex.Message + ". Use Gorilla CAK Inspector.exe to select a readable file directly." });
+                report.Findings.Add(new Finding { Id = "gorilla-cak-unavailable", Title = "CAK folder inspection could not finish", Text = "No file validity is claimed. " + ex.Message + ". Check the game folder selected in Folders, close any tool copying or baking files, then press Check Again." });
             }
         }
     }

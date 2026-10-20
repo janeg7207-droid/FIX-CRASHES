@@ -6,7 +6,9 @@ import os
 from pathlib import Path
 import shutil
 import subprocess
+import sys
 import zipfile
+from verify_package import EXPECTED_FILES, verify_release
 
 ROOT = Path(__file__).resolve().parents[1]
 ORIGINAL_HASHES = {
@@ -21,7 +23,11 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("input_zip", type=Path)
     parser.add_argument("--dotnet", default="dotnet", help=".NET 8 SDK host executable")
+    parser.add_argument("--clamscan", help="Optional ClamAV scanner executable; a failed scan stops packaging")
+    parser.add_argument("--clamav-database", type=Path, help="Verified ClamAV database directory, required with --clamscan")
     args = parser.parse_args()
+    if bool(args.clamscan) != bool(args.clamav_database):
+        parser.error("--clamscan and --clamav-database must be provided together")
     source_zip = args.input_zip.resolve()
     dotnet = shutil.which(args.dotnet)
     if not dotnet:
@@ -38,6 +44,7 @@ def main():
         logs.append(result.stdout)
         if result.returncode:
             raise SystemExit(result.returncode)
+        return result.stdout
 
     original = ROOT / "build/original"
     original.mkdir(parents=True, exist_ok=True)
@@ -57,15 +64,15 @@ def main():
         for name, data in files.items():
             (original / name).write_bytes(data)
 
-    projects = ["src/CrashDetails/CrashDetails.csproj", "src/CakInspectorApp/CakInspectorApp.csproj",
-                "src/Patcher/Patcher.csproj", "tests/CrashDetails.Tests.csproj"]
+    projects = ["src/CrashDetails/CrashDetails.csproj", "src/Patcher/Patcher.csproj", "tests/CrashDetails.Tests.csproj"]
     run(dotnet, "tool", "restore")
     for project in projects:
         run(dotnet, "restore", project, "--locked-mode")
         run(dotnet, "build", project, "--configuration", "Release", "--no-restore")
     run(dotnet, ROOT / "tests/bin/Release/net8.0/CrashDetails.Tests.dll")
+    run(sys.executable, "-m", "unittest", "discover", "-s", "tests", "-p", "test_package.py", "-v")
 
-    output = ROOT / "artifacts/Gorilla Mod Manager 26 - Crash and CAK Checks"
+    output = ROOT / "artifacts/Gorilla Mod Manager 26 - Integrated CAK Checks r2"
     output.mkdir(parents=True, exist_ok=True)
     add_on = ROOT / "src/CrashDetails/bin/Release/net48/GorillaCrashDetails.dll"
     patched = output / "Gorilla Mod Manager 26.exe"
@@ -74,11 +81,6 @@ def main():
     for name in ("GorillaReader.dll", "GorillaReader.runtimeconfig.json"):
         shutil.copyfile(original / name, output / name)
     shutil.copyfile(add_on, output / add_on.name)
-    inspector = ROOT / "src/CakInspectorApp/bin/Release/net48/Gorilla CAK Inspector.exe"
-    shutil.copyfile(inspector, output / inspector.name)
-    inspector_config = inspector.with_suffix(".exe.config")
-    if inspector_config.exists():
-        shutil.copyfile(inspector_config, output / inspector_config.name)
     shutil.copyfile(original / "README.txt", output / "README.original.txt")
     shutil.copyfile(ROOT / "docs/CRASH-DETAILS.txt", output / "README.txt")
     shutil.copyfile(ROOT / "docs/THIRD-PARTY-NOTICES.txt", output / "THIRD-PARTY-NOTICES.txt")
@@ -94,37 +96,50 @@ def main():
     if not references:
         raise SystemExit(".NET Framework reference assemblies not found after restore.")
     reference_args = []
-    for reference in references + [add_on, alias, inspector]:
+    for reference in references + [add_on, alias]:
         reference_args.extend(["-r", reference])
     run(dotnet, "tool", "run", "ilverify", str(alias), "--include", "Doctor.*Examine", "--statistics", *reference_args)
     run(dotnet, "tool", "run", "ilverify", str(add_on), "--statistics", *reference_args)
-    run(dotnet, "tool", "run", "ilverify", str(inspector), "--statistics", *reference_args)
+
+    scan_status = ("MICROSOFT DEFENDER: NOT RUN. No Microsoft malware classification/review is available.\n"
+                   "The previously flagged standalone Gorilla CAK Inspector.exe has been removed.\n"
+                   "Removal of that component does not establish that the remaining package is safe.\n")
+    if args.clamscan:
+        scan_status += run(args.clamscan, "--version")
+        scan_status += run(args.clamscan, "--database=" + str(args.clamav_database.resolve()), "--recursive", str(output))
+        scan_status += "ClamAV scan completed successfully for the output directory; this is not Microsoft Defender clearance.\n"
+    else:
+        scan_status += "ANTIVIRUS SCAN: NOT RUN. No scanner with usable virus definitions was supplied to this build.\n"
+    (output / "ANTIVIRUS-STATUS.txt").write_text(scan_status, encoding="utf-8")
 
     validation = ("VALIDATION OF THIS BUILD\n"
                   "Build/diagnostic checks follow. These are not Windows UI or WWE game tests.\n\n" + "\n".join(logs))
     (output / "VALIDATION.txt").write_text(validation, encoding="utf-8")
-    hashes = {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(output.iterdir()) if p.is_file() and p.name != "SHA256SUMS.txt"}
+    unexpected = {p.name for p in output.iterdir()} - EXPECTED_FILES
+    if unexpected:
+        raise SystemExit("Unexpected output files; refusing to package: " + str(unexpected))
+    hashes = {name: hashlib.sha256((output / name).read_bytes()).hexdigest() for name in sorted(EXPECTED_FILES - {"SHA256SUMS.txt"})}
     (output / "SHA256SUMS.txt").write_text("".join(f"{digest}  {name}\n" for name, digest in hashes.items()), encoding="utf-8")
 
-    release_zip = ROOT / "artifacts/Gorilla-Mod-Manager-26-v2.0.4-Crash-and-CAK-Checks.zip"
+    release_zip = ROOT / "artifacts/Gorilla-Mod-Manager-26-v2.0.4-Integrated-CAK-Checks-r2.zip"
     with zipfile.ZipFile(release_zip, "w", compression=zipfile.ZIP_DEFLATED) as archive:
         for name in list(hashes) + ["SHA256SUMS.txt"]:
             archive.write(output / name, name)
-    with zipfile.ZipFile(release_zip) as archive:
-        if archive.testzip() is not None:
-            raise SystemExit("Output ZIP integrity check failed.")
-        for name, expected in hashes.items():
-            if hashlib.sha256(archive.read(name)).hexdigest() != expected:
-                raise SystemExit("Packaged hash mismatch: " + name)
+    print("Release package verified:", verify_release(release_zip))
+    archive_scan = "Archive antivirus scan: NOT RUN.\n"
+    if args.clamscan:
+        archive_scan = run(args.clamscan, "--database=" + str(args.clamav_database.resolve()), str(release_zip))
+    release_zip.with_suffix(".antivirus.txt").write_text(scan_status + "\n" + archive_scan, encoding="utf-8")
 
-    source_output = ROOT / "artifacts/Gorilla-Crash-and-CAK-Checks-Source.zip"
+    source_output = ROOT / "artifacts/Gorilla-Integrated-CAK-Checks-r2-Source.zip"
     with zipfile.ZipFile(source_output, "w", compression=zipfile.ZIP_DEFLATED) as archive:
         paths = [ROOT / x for x in ("README.md", ".gitignore", "global.json", "Directory.Build.props", ".config/dotnet-tools.json")]
         for folder in ("src", "tests", "tools", "docs"):
             paths.extend(p for p in (ROOT / folder).rglob("*") if p.is_file() and not {"bin", "obj", "__pycache__"}.intersection(p.relative_to(ROOT).parts))
         for path in sorted(paths):
+            if path.suffix.lower() in {".exe", ".dll", ".zip", ".nupkg"}:
+                raise SystemExit("Binary input is forbidden in the code-only source ZIP: " + str(path))
             archive.write(path, str(path.relative_to(ROOT)))
-        archive.write(source_zip, "original-upload.zip")
     with zipfile.ZipFile(source_output) as archive:
         if archive.testzip() is not None:
             raise SystemExit("Source ZIP integrity check failed.")

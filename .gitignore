@@ -2,3 +2,4 @@ build/
 artifacts/
 **/bin/
 **/obj/
+**/__pycache__/

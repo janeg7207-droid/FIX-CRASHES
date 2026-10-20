@@ -1,4 +1,4 @@
-# Antivirus report: downloads withdrawn
+# Antivirus report: original download withdrawn, r2 unverified
 
 Microsoft Defender reported `Trojan:Win32/Ulthar.A!ml` for
 `Gorilla CAK Inspector.exe` inside the application ZIP on October 20, 2026.
@@ -14,10 +14,36 @@ as a false positive or treated as an unsigned-application warning.
 - Packaged Inspector SHA-256: `c1ab7774bb5cce98c76e569f9e8bf437e1a45ece3cc6699429149a862f23c920`
 - Original upload commit: `46891daf7a0399ee2e4797c9ecd6cb44ec167ac4`
 
-The application ZIP and binary-containing source ZIP were removed from the
-current branch. Git history still retains them; historical availability is not
+The original application ZIP and binary-containing source ZIP were removed from
+the current branch. Git history still retains them; historical availability is not
 an endorsement to download or execute them. No force-push or history rewrite
 was performed. Source code and investigation evidence are retained.
+
+## r2 remediation and remaining verification
+
+At the user's request, r2 removes the entire standalone Inspector executable,
+its configuration and its build project. Its existing CAK parsing/checking logic
+remains part of the manager's Fix My Game report. No executable was renamed,
+packed or obfuscated as a replacement for the reported standalone program.
+The manager's original features remain in place.
+
+The revised package has an exact file manifest and rejects the previously
+reported file's SHA-256, extra executables, unexpected files and checksum
+mismatches. Seven package regression tests cover these checks. The source ZIP
+contains code only and no nested original executable package.
+
+This is a component-removal revision, **not confirmed malware remediation or a
+Microsoft false-positive verdict**. The revised application is published with
+antivirus clearance explicitly unverified. The older flagged build remains
+withdrawn and must remain blocked.
+
+A local ClamAV 1.4.3 engine was obtained using Debian's signed package indices
+and verified package downloads. The official virus-definition update failed:
+the network proxy returned `CONNECT tunnel failed, response 403` for
+`database.clamav.net`. No definitions were substituted and no partial or zero-
+signature scan was reported as a passing malware check. Microsoft Defender is
+unavailable in this Linux environment. See the actual package's
+`ANTIVIRUS-STATUS.txt`; neither scanner has cleared the r2 package here.
 
 ## Established facts and limits
 
@@ -35,8 +61,8 @@ was performed. Source code and investigation evidence are retained.
   did not execute Microsoft Defender, perform a malware scan, or test Windows/game
   operation. No malware-free claim can be made from those results.
 - A confirmed Microsoft Defender classification/review and Windows security
-  validation are still unavailable. No bypass, packing, obfuscation, filename
-  change or binary mutation has been used to avoid the detection.
+  validation are still unavailable. The r2 changes remove the standalone feature;
+  no antivirus bypass, packing or obfuscation has been introduced.
 
 ## Handling a downloaded copy
 
@@ -48,5 +74,5 @@ Do not allow the detection or add an antivirus exclusion.
 
 Microsoft's official file-review submission page is
 https://www.microsoft.com/en-us/wdsi/filesubmission . No files have been submitted
-to a third-party service by this investigation. A review result is still pending
-external submission; this document does not claim one has been requested.
+to a third-party service by this investigation. No vendor review has been
+requested or obtained.
