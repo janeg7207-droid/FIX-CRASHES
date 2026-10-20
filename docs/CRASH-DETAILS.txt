@@ -1,82 +1,105 @@
-GORILLA MOD MANAGER 26 v2.0.4 - INTEGRATED CAK CHECKS r2
-=====================================================
+MYKELOVVES MOD MANAGER r3
+========================
+Same-file comparisons, CAK inspection and crash investigation
+
+Based on the supplied Gorilla Mod Manager 26 v2.0.4 by Mr Creeper HD.
+This is an unofficial modification with the name requested by the user.
+Original mod management, TRIBUTE, Discovery, backup, restore, mod search and
+update code are retained. See README.original.txt for the original credits.
+Existing data/settings paths and internal resource names stay compatible.
+Official updates may replace the added hooks and branding.
 
 SECURITY STATUS
 ---------------
-The earlier package was flagged by Microsoft Defender as Trojan:Win32/Ulthar.A!ml
-in Gorilla CAK Inspector.exe. This revision completely removes that standalone
-program and its build project. Existing CAK checks remain inside the manager.
-This is a functional/package revision, not a confirmed malware-free build or a
-Microsoft false-positive verdict. Read ANTIVIRUS-STATUS.txt for actual scan status.
-Keep antivirus protection enabled. If this build is flagged, leave it blocked;
-do not allow it or add an exclusion. The earlier package remains withdrawn.
+The earlier standalone Gorilla CAK Inspector.exe was flagged by Microsoft
+Defender as Trojan:Win32/Ulthar.A!ml. That program and its project were removed
+in r2; r3 keeps them excluded. The main manager's requested name change does
+not reintroduce or replace that standalone program.
+This package has NOT received antivirus clearance or a Microsoft false-positive
+verdict. Read ANTIVIRUS-STATUS.txt. Keep antivirus protection enabled and leave
+any detection blocked; do not add an exclusion. The flagged build stays withdrawn.
 
-This is an unofficial modified copy of the supplied v2.0.4 package. Original
-author: Mr Creeper HD. Original mod management, TRIBUTE, Discovery, backup,
-restore and update code are retained. See README.original.txt.
+USE THE CHECKS
+--------------
+1. Let Windows protection inspect the download. Continue only if it allows it.
+2. Extract to a NEW folder, separate from the withdrawn build.
+3. Keep Mykelovves Mod Manager.exe, MykelovvesDiagnostics.dll, GorillaReader.dll
+   and GorillaReader.runtimeconfig.json together. The diagnostic DLL is required.
+4. Launch Mykelovves Mod Manager.exe, then FIX MY GAME > CHECK AGAIN.
+5. The scan reads enabled, top-level .cak files in the configured mods folder.
+   Use the original Add a Mod page to install a CAK. Disabled files, subfolders
+   and files outside that folder are excluded from this automatic scan.
+6. Read the crash explanation, SAME FILES AND CAK INSPECTION, shared-file cards
+   and CRASH INVESTIGATION. OPEN FOLDER on the report cards opens local reports.
 
-USE THE INTEGRATED CHECKS
+WHAT THE RESULTS MEAN
+---------------------
+- Identical whole CAK files: named archives have matching whole-file SHA-256.
+- Identical stored bytes: the exact internal path exists in the named CAKs and
+  the stored payload hashes match. Every owner and matching subset is listed.
+- Different stored versions: the same internal path has different stored bytes
+  in the named CAKs. Different compression or encryption may explain this;
+  it is not proof of incompatible decoded content or a game crash.
+- Shared asset ID, different path names: identity is unconfirmed, not a claim
+  that these are the same internal file.
+- Confirmed structural/read problem: a named CAK has invalid tables, references
+  or payload bounds, or could not be read. An exact internal path is included
+  when the defective entry is known. Its connection to a crash remains unproven.
+- Recent CakeHook error text: a quoted error mentions this exact CAK in the last
+  marked log session, and the log is newer than the file. This is a lead, not
+  a confirmed cause. Stale/unmarked logs do not become current error evidence.
+- Mod search isolated: the original search's recorded result names the archive
+  implicated by the user's test rounds. It does not identify an internal asset.
+
+The crash explanation includes Windows event time, faulting component,
+exception code, offset, confidence and suggested checks when available.
+Identical files, shared paths, timing or a faulting Windows/plugin DLL alone
+cannot establish the exact root cause. No cause is invented when evidence is
+missing. Repeat the same scene with the suspected archive off and restored,
+using the existing backup and mod-search controls. Logs or a crash dump may
+still be needed to identify the exact internal file.
+
+SUPPORTED CAKS AND LIMITS
 -------------------------
-1. Let your antivirus inspect the new download. Continue only if it allows it.
-2. Extract to a NEW folder. Do not copy files over the withdrawn build.
-3. Keep Gorilla Mod Manager 26.exe, GorillaCrashDetails.dll, GorillaReader.dll
-   and GorillaReader.runtimeconfig.json together. The new DLL is required.
-4. Open the manager on Windows, then FIX MY GAME > CHECK AGAIN.
-5. CAK file inspection reads enabled, top-level .cak files in the configured
-   mods folder. Use the existing Add a Mod page for installation. Disabled
-   files and subfolders are excluded from the automatic inspection.
-6. Read the crash explanation, CAK file cards, shared asset IDs and any quoted
-   CakeHook messages. OPEN FOLDER on the crash card opens a saved local report.
+Plaintext FDIR versions: 6.7, 6.8, 8.1, 8.2, 8.3, 8.7, 9.1, 9.2, 9.3.
+Headers, table structure, names, IDs, chunk metadata and payload bounds are read.
+Encrypted metadata and unsupported formats, including 9.9, are LIMITED, not
+marked corrupt. Their entries and integrity are unverified. Payload hashing
+never decompresses or decrypts; encrypted entries are compared as ciphertext.
+Checksums, texture/model correctness, game compatibility and the loader's
+chosen replacement winner are not established.
 
-There is no standalone CAK Inspector in this revision. No separate executable
-is required for the integrated checks. A file outside the configured mods
-folder is not automatically inspected.
-
-WHAT IS CHECKED
-----------------
-- Windows crash/hang time, faulting component, exception code and offset,
-  when Windows supplies them, with confidence and suggested next checks.
-- Actual FDIR CAK bytes and supported plaintext file/directory tables, names,
-  asset IDs, chunk metadata and payload bounds. This can expose empty files,
-  incorrect extensions, broken tables, invalid references and truncated data.
-- Shared asset IDs between enabled CAKs. These can be intentional replacements;
-  an overlap is a lead, not proof of a conflict or crash cause.
-- CakeHook messages mentioning the filename, when present, from the last marked
-  session. Stale logs are flagged. A filename mention may be a successful load.
-
-Plaintext formats supported: 6.7, 6.8, 8.1, 8.2, 8.3, 8.7, 9.1, 9.2, 9.3.
-Encrypted metadata and other versions, including 9.9, are marked LIMITED.
-Their entries/integrity are NOT validated. Encryption or an unsupported version
-does not prove corruption. Checksums, compressed/encrypted asset contents,
-model/texture correctness and exact game compatibility are not validated.
-
-Inspection limits: 32 MiB metadata and 100,000 entries per CAK; 256 enabled
-archives and 200,000 distinct asset IDs in an automatic scan. Up to 20 file
-cards and 12 overlap cards are shown. Reaching a limit is reported explicitly.
-The check never extracts, edits, deletes or disables a CAK.
-
-If evidence is insufficient, the report says the cause is unknown. A crash
-inside a plugin, an access violation or a shared Windows DLL cannot by itself
-identify which mod introduced the underlying fault. Use repeated comparable
-tests and the existing backup/restore controls to investigate a suspect.
+Limits: 256 enabled CAKs; 32 MiB metadata and 100,000 entries per archive;
+200,000 retained entry references; 1,000 shared-file groups; 20 file-specific
+cards and 12 shared-file cards. Hash reads are limited to 256 MiB and 15 seconds
+overall, 64 MiB per whole archive and 32 MiB per asset. Files changed during the
+scan and omitted or unreadable copies stay unverified. No equality is claimed
+from a partial hash. Missing results do not establish difference or health.
+No CAK is extracted, edited, deleted or automatically switched off.
 
 LOCAL REPORTS
----------------
-The latest report is saved in Crash Reports/Latest crash report.txt under
-Gorilla's data folder. It is saved locally only and may contain personal file
-paths. Review it before sharing. Only the latest report is retained.
+--------------
+Under the existing manager data folder:
+  Crash Reports/Latest crash report.txt
+  Crash Reports/Same files report.txt
 
-REQUIREMENTS AND LIMITS
-------------------------
-- Windows with .NET Framework 4.8 for the original desktop app and add-on.
-- The original GorillaReader helper targets .NET 10. If that runtime is missing,
-  obtain Microsoft's x64 .NET 10 Runtime from the official Microsoft download site:
-  https://dotnet.microsoft.com/download/dotnet/10.0
-- A WWE 2K26 installation and available Windows Application event records.
-- This Linux build environment cannot run Microsoft Defender, the Windows UI or
-  WWE 2K26. Functional and package checks do not establish malware safety.
+The same-files report lists every group retained within scan limits, including
+archive names, exact internal paths, available SHA-256 hashes, file problems and
+ranked investigation leads. The UI shows only the first 12 shared-file groups.
+Only the latest version of each report is retained. Reports are saved locally,
+never uploaded automatically, and can contain personal paths. Review before sharing.
+
+REQUIREMENTS AND VALIDATION
+---------------------------
+- Windows with .NET Framework 4.8 for the desktop app and diagnostic add-on.
+- The unchanged GorillaReader helper targets .NET 10. If needed, get Microsoft's
+  x64 .NET 10 Runtime from https://dotnet.microsoft.com/download/dotnet/10.0 .
+- WWE 2K26 and available Windows Application event records for crash evidence.
+- VALIDATION.txt contains build, diagnostic, package and IL verification output.
+  These checks are not antivirus scans or Windows UI/game tests.
+- Linux cannot run Microsoft Defender or validate actual Windows startup, the
+  new header layout or a real game crash. Those checks stay unverified.
 - Your particular CAK has not been supplied or examined here.
-- This patch accepts only the exact uploaded v2.0.4 executable. An official
-  update may replace the report hook and requires a separately reviewed patch.
+- Only the exact original uploaded v2.0.4 executable is accepted by the builder.
 
 Format research credit: Nenkai/Bakery. See THIRD-PARTY-NOTICES.txt.

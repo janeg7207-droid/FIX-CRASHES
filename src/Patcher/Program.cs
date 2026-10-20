@@ -5,7 +5,7 @@ using Mono.Cecil.Cil;
 using Mono.Cecil.Rocks;
 
 if (args.Length != 3)
-    throw new ArgumentException("Usage: Patcher <original.exe> <GorillaCrashDetails.dll> <output.exe>");
+    throw new ArgumentException("Usage: Patcher <original.exe> <MykelovvesDiagnostics.dll> <output.exe>");
 string originalPath = Path.GetFullPath(args[0]);
 string addOnPath = Path.GetFullPath(args[1]);
 string outputPath = Path.GetFullPath(args[2]);
@@ -47,6 +47,25 @@ foreach (var end in returns)
 }
 examine.Body.MaxStackSize = Math.Max(examine.Body.MaxStackSize, 4);
 examine.Body.OptimizeMacros();
+
+var shell = assembly.MainModule.Types.Single(t => t.FullName == "Gorilla.Manager.Shell");
+var constructor = shell.Methods.Single(m => m.IsConstructor && !m.IsStatic && !m.HasParameters);
+var brand = assembly.MainModule.ImportReference(addOn.MainModule.Types.Single(t => t.FullName == "Gorilla.CrashDetails.Branding")
+    .Methods.Single(m => m.Name == "Apply"));
+var constructorReturns = constructor.Body.Instructions.Where(i => i.OpCode == OpCodes.Ret).ToList();
+if (constructorReturns.Count != 1) throw new InvalidOperationException("Unexpected shell constructor; refusing to patch.");
+constructor.Body.SimplifyMacros();
+var shellIl = constructor.Body.GetILProcessor();
+var shellEnd = constructorReturns[0];
+shellEnd.OpCode = OpCodes.Ldarg_0;
+shellEnd.Operand = null;
+var brandingCall = Instruction.Create(OpCodes.Call, brand);
+shellIl.InsertAfter(shellEnd, brandingCall);
+shellIl.InsertAfter(brandingCall, Instruction.Create(OpCodes.Ret));
+constructor.Body.OptimizeMacros();
+foreach (var attribute in assembly.CustomAttributes.Where(a => a.AttributeType.FullName is
+    "System.Reflection.AssemblyTitleAttribute" or "System.Reflection.AssemblyProductAttribute"))
+    attribute.ConstructorArguments[0] = new CustomAttributeArgument(assembly.MainModule.TypeSystem.String, "Mykelovves Mod Manager");
 Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
 assembly.Write(outputPath);
 
@@ -61,7 +80,7 @@ for (int n = 0; n < originalMethods.Count; n++)
     var before = originalMethods[n];
     var after = patchedMethods[n];
     if (before.FullName != after.FullName) throw new Exception("Method identity changed.");
-    if (before.FullName == examine.FullName) continue;
+    if (before.FullName == examine.FullName || before.FullName == constructor.FullName) continue;
     if (MethodSignature(before) != MethodSignature(after)) throw new Exception("Unexpected change in " + before.FullName);
     unchanged++;
 }
@@ -75,7 +94,10 @@ if (original.Name.FullName != patched.Name.FullName) throw new Exception("Assemb
 var hook = AllTypes(patched.MainModule.Types).SelectMany(t => t.Methods).Single(m => m.FullName == examine.FullName);
 if (hook.Body.Instructions.Count(i => i.OpCode == OpCodes.Call && i.Operand is MethodReference m && m.FullName == imported.FullName) != returns.Count)
     throw new Exception("Not every report return was hooked.");
-Console.WriteLine($"Verified: {unchanged} method bodies unchanged; only Doctor.Examine extended at its {returns.Count} returns.");
+var branded = AllTypes(patched.MainModule.Types).SelectMany(t => t.Methods).Single(m => m.FullName == constructor.FullName);
+if (branded.Body.Instructions.Count(i => i.OpCode == OpCodes.Call && i.Operand is MethodReference m && m.FullName == brand.FullName) != 1)
+    throw new Exception("The shell branding hook is missing or duplicated.");
+Console.WriteLine($"Verified: {unchanged} method bodies unchanged; Doctor.Examine extended at its {returns.Count} returns and Shell constructor branded once.");
 Console.WriteLine($"Verified: all {original.MainModule.Resources.Count} original resources and the assembly identity are unchanged.");
 
 static IEnumerable<TypeDefinition> AllTypes(IEnumerable<TypeDefinition> types)

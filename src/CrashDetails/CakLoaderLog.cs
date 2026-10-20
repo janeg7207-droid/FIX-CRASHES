@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace Gorilla.CrashDetails
 {
@@ -12,6 +13,7 @@ namespace Gorilla.CrashDetails
         private string[] lines = new string[0];
         public string Status = "CakeHook has no readable load report; a missing report does not prove that a CAK failed to load.";
         public DateTime WrittenUtc;
+        public bool HasSessionMarker;
 
         public static CakLoaderLog Read(string gameDir)
         {
@@ -36,6 +38,7 @@ namespace Gorilla.CrashDetails
                 }
                 int session = result.content.LastIndexOf("load report (new session)", StringComparison.OrdinalIgnoreCase);
                 if (session >= 0) result.content = result.content.Substring(session);
+                result.HasSessionMarker = session >= 0;
                 result.lines = result.content.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
                 result.Status = "CakeHook log: " + result.WrittenUtc.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss") +
                     (session >= 0 ? "; only the last marked session was considered." : "; no session marker was found, so quoted lines may be historical.");
@@ -56,6 +59,18 @@ namespace Gorilla.CrashDetails
                 string.Join("\n", quoted.Select(line => "> " + line)) + "\n" + Status +
                 (stale ? "\nThis log predates the current CAK file's modification time. Reproduce the load and refresh before attributing these messages to this copy." : "") +
                 "\nA filename mention can be a successful load or another event. Read the message itself; absence of a mention does not prove a loading failure.";
+        }
+
+        public string RecentErrorForFile(string path, DateTime now)
+        {
+            DateTime utc = now.ToUniversalTime();
+            if (!HasSessionMarker || WrittenUtc < File.GetLastWriteTimeUtc(path) || WrittenUtc > utc || WrittenUtc < utc.AddDays(-7)) return null;
+            string name = Path.GetFileName(path);
+            var errors = lines.Where(line => Mentions(line, name) &&
+                Regex.IsMatch(line, @"\b(failed|rejected|invalid|corrupt|unable to|could not)\b", RegexOptions.IgnoreCase) &&
+                !Regex.IsMatch(line, @"\b(no|not|without|zero)\s+(errors?|failures?|failed|corruption)\b|\b(failed|errors?|failures?)\s*[:=]\s*0\b", RegexOptions.IgnoreCase))
+                .Take(3).Select(line => line.Length > 600 ? line.Substring(0, 600) + " [line shortened]" : line).ToList();
+            return errors.Count == 0 ? null : string.Join("\n", errors.Select(line => "> " + line));
         }
 
         private static bool Mentions(string line, string name)

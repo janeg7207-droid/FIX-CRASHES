@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace Gorilla.CrashDetails
@@ -11,6 +12,7 @@ namespace Gorilla.CrashDetails
         public string Code;
         public string Message;
         public bool Error;
+        public string AssetPath;
     }
 
     public sealed class CakAsset
@@ -19,6 +21,10 @@ namespace Gorilla.CrashDetails
         public string Path;
         public uint StoredBytes;
         public uint ExpandedBytes;
+        public ulong StoredOffset;
+        public ulong StoredLength;
+        public string StorageLayout;
+        public bool PayloadEncrypted;
     }
 
     public sealed class CakInspection
@@ -30,6 +36,7 @@ namespace Gorilla.CrashDetails
         public bool External;
         public bool TablesRead;
         public int FileCount;
+        public long WriteUtcTicks;
         public readonly List<CakIssue> Issues = new List<CakIssue>();
         public readonly List<CakAsset> Assets = new List<CakAsset>();
         public bool HasErrors => Issues.Any(i => i.Error);
@@ -49,7 +56,7 @@ namespace Gorilla.CrashDetails
                 foreach (CakAsset asset in Assets.Take(8)) text.AppendLine("- " + asset.Path);
             }
             text.AppendLine("Scope: table structure and payload bounds only. Compressed/encrypted asset contents are not decoded, and game-version compatibility, texture/model correctness and the exact crash cause are not established by this scan.");
-            text.Append("Next: use the reported file/entry as a lead. Obtain a fresh copy or rebake for your exact game version when a structural problem is reported. If only an overlap or limited inspection is reported, compare runs with that mod disabled and restored through Gorilla; do not delete it on this evidence alone.");
+            text.Append("Next: use the reported file/entry as a lead. Obtain a fresh copy or rebake for your exact game version when a structural problem is reported. If only an overlap or limited inspection is reported, compare runs with that mod disabled and restored through the manager; do not delete it on this evidence alone.");
             return text.ToString();
         }
     }
@@ -69,6 +76,7 @@ namespace Gorilla.CrashDetails
             public ulong Offset;
             public uint LastChunk;
             public bool HasChunks;
+            public string ChunkLayout = "none";
         }
 
         public static CakInspection Inspect(string path)
@@ -78,6 +86,7 @@ namespace Gorilla.CrashDetails
             {
                 var before = new FileInfo(path);
                 long writeTicks = before.LastWriteTimeUtc.Ticks;
+                result.WriteUtcTicks = writeTicks;
                 using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete))
                 using (var reader = new BinaryReader(stream, Encoding.UTF8, true))
                 {
@@ -91,7 +100,7 @@ namespace Gorilla.CrashDetails
                     }
                 }
             }
-            catch (InvalidDataException ex) { Problem(result, "InvalidStructure", ex.Message); }
+            catch (InvalidDataException ex) { Problem(result, "InvalidStructure", ex.Message, ex.Data["AssetPath"] as string); }
             catch (EndOfStreamException) { Problem(result, "Truncated", "The header or an archive table ends before its declared data. The download, copy or bake may be incomplete."); }
             catch (DecoderFallbackException) { Problem(result, "InvalidStructure", "An archive path contains invalid UTF-8 and could not be read using the supported CAK string layout."); }
             catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException || ex is ArgumentException || ex is NotSupportedException || ex is System.Security.SecurityException)
@@ -193,8 +202,14 @@ namespace Gorilla.CrashDetails
                 ulong stored = entry.HasChunks ? entry.LastChunk : (entry.Flags & 0x80000000U) != 0 ? entry.Expanded : entry.Size;
                 if (!result.External && stored > 0 &&
                     (entry.Offset < tocEnd || entry.Offset > (ulong)result.Bytes || stored > (ulong)result.Bytes - entry.Offset))
-                    throw Invalid("Payload for '" + fullPath + "' extends outside the CAK or overlaps its metadata (offset " + entry.Offset + ", bytes " + stored + "). The file may be truncated or incorrectly baked.");
-                result.Assets.Add(new CakAsset { Hash = pair.Key, Path = fullPath, StoredBytes = entry.Size, ExpandedBytes = entry.Expanded });
+                    throw Invalid("Payload for '" + fullPath + "' extends outside the CAK or overlaps its metadata (offset " + entry.Offset + ", bytes " + stored + "). The file may be truncated or incorrectly baked.", fullPath);
+                bool encryptedData = major >= 9 ? (entry.Flags & 0x100) != 0 : major == 8 && minor == 7 ? entry.Flags != 0 : (flags & 0x8000) != 0;
+                result.Assets.Add(new CakAsset
+                {
+                    Hash = pair.Key, Path = fullPath, StoredBytes = entry.Size, ExpandedBytes = entry.Expanded,
+                    StoredOffset = entry.Offset, StoredLength = stored, PayloadEncrypted = encryptedData,
+                    StorageLayout = result.Version + ":" + entry.Flags + ":" + entry.Expanded + ":" + entry.ChunkLayout
+                });
             }
             result.FileCount = (int)fileCount;
             result.TablesRead = true;
@@ -255,18 +270,22 @@ namespace Gorilla.CrashDetails
                         entry.Offset = reader.ReadUInt64(); entry.Expanded = reader.ReadUInt32();
                         ushort chunkCount = reader.ReadUInt16(); entry.Flags = reader.ReadUInt32();
                         uint previous = 0;
+                        byte[] chunkData = reader.ReadBytes(chunkCount * 4);
+                        if (chunkData.Length != chunkCount * 4) throw new EndOfStreamException();
                         for (int c = 0; c < chunkCount; c++)
                         {
-                            uint end = reader.ReadUInt32();
+                            uint end = BitConverter.ToUInt32(chunkData, c * 4);
                             if (end < previous) throw Invalid("Compressed chunk end offsets move backwards inside a file entry.");
                             previous = end;
                         }
+                        if (chunkCount > 0)
+                            using (var sha = SHA256.Create()) entry.ChunkLayout = chunkCount + ":" + BitConverter.ToString(sha.ComputeHash(chunkData)).Replace("-", "");
                         entry.HasChunks = chunkCount > 0; entry.LastChunk = previous; chunks += chunkCount;
                     }
                     else if (major == 8 && minor == 7)
                     {
                         entry.Size = reader.ReadUInt32(); entry.Offset = reader.ReadUInt64();
-                        reader.ReadUInt32(); entry.Expanded = reader.ReadUInt32(); reader.ReadByte();
+                        reader.ReadUInt32(); entry.Expanded = reader.ReadUInt32(); entry.Flags = reader.ReadByte();
                     }
                     else
                     {
@@ -307,9 +326,10 @@ namespace Gorilla.CrashDetails
             return bytes;
         }
         private static BinaryReader SectionReader(BinaryReader file, Section section) => new BinaryReader(new MemoryStream(ReadSection(file, section), false));
-        private static InvalidDataException Invalid(string text) => new InvalidDataException(text);
-        private static void Problem(CakInspection result, string code, string text)
-        { result.TablesRead = false; result.Assets.Clear(); result.Issues.Add(new CakIssue { Code = code, Message = text, Error = true }); }
+        private static InvalidDataException Invalid(string text, string assetPath = null)
+        { var error = new InvalidDataException(text); if (assetPath != null) error.Data["AssetPath"] = assetPath; return error; }
+        private static void Problem(CakInspection result, string code, string text, string assetPath = null)
+        { result.TablesRead = false; result.Assets.Clear(); result.Issues.Add(new CakIssue { Code = code, Message = text, Error = true, AssetPath = assetPath }); }
         private static void Note(CakInspection result, string code, string text) => result.Issues.Add(new CakIssue { Code = code, Message = text });
     }
 }

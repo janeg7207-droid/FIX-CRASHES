@@ -32,7 +32,7 @@ namespace Gorilla.CrashDetails
                 if (!CrashLog.Readable)
                 {
                     title = "Crash cause unavailable: Windows records could not be read";
-                    details = "Gorilla could not read Windows' Application event log. That is not evidence that the game did not crash.\n\n" +
+                    details = "Mykelovves Mod Manager could not read Windows' Application event log. That is not evidence that the game did not crash.\n\n" +
                         "Open Windows Event Viewer > Windows Logs > Application and look near the time of the failure for WWE2K26_x64.exe (Application Error or Application Hang). " +
                         "Save the General/Details text for support. Other file checks and the existing mod search are still available.";
                     report.Headline = "I could not read the game's crash records.";
@@ -44,7 +44,7 @@ namespace Gorilla.CrashDetails
                     title = "No Windows crash record: the cause is unknown";
                     details = "Windows supplied no matching game crash or hang record for the period checked. Some exits, forced closes, power losses and failures do not produce one. " +
                         "This does not prove that the game is healthy or identify a bad mod.\n\n" +
-                        "Keep Gorilla open, reproduce the same match/entrance/arena, then press Check Again on Fix My Game after Windows has written the record. " +
+                        "Keep Mykelovves Mod Manager open, reproduce the same match/entrance/arena, then press Check Again on Fix My Game after Windows has written the record. " +
                         "If it is still absent, note the time and actions and check Event Viewer and CakeHook's own report. The existing mod search can help reproduce the failure.";
                     report.Line = "No matching Windows crash record was found. The exact cause is unknown; see the explanation and next checks below.";
                     if (report.Mood == "good")
@@ -66,7 +66,7 @@ namespace Gorilla.CrashDetails
                     var suspects = (report.Suspects ?? new List<Suspect>()).Where(s => s != null).Take(3).ToList();
                     if (suspects.Count > 0)
                     {
-                        details += "\n\nOther leads from Gorilla (not confirmed causes):\n" + string.Join("\n", suspects.Select(s =>
+                        details += "\n\nOther leads from the manager (not confirmed causes):\n" + string.Join("\n", suspects.Select(s =>
                             "- " + s.Title + ": " + string.Join("; ", s.Why ?? new List<string>())));
                     }
                     if (recent)
@@ -86,7 +86,8 @@ namespace Gorilla.CrashDetails
                     Serious = recent || !CrashLog.Readable
                 };
                 report.Findings.Insert(0, finding);
-                CakChecks.Append(report, core.Places);
+                CakChecks.Append(report, core.Places, now);
+                CrashLeads.AppendSearchResult(report, core.Finder == null ? null : core.Finder.State);
                 SaveReport(report, finding, core.Places.DataDir, now);
             }
             catch (Exception ex)
@@ -98,7 +99,7 @@ namespace Gorilla.CrashDetails
                     {
                         Id = "gorilla-crash-details-error",
                         Title = "The extra crash explanation could not be completed",
-                        Text = "The original Gorilla checks are still available. Diagnostic error: " + ex.GetType().Name + ": " + ex.Message
+                        Text = "The original manager checks are still available. Diagnostic error: " + ex.GetType().Name + ": " + ex.Message
                     });
             }
             return report;
@@ -135,11 +136,11 @@ namespace Gorilla.CrashDetails
         {
             try
             {
-                if (string.IsNullOrWhiteSpace(dataDir)) throw new IOException("The Gorilla data folder is unavailable.");
+                if (string.IsNullOrWhiteSpace(dataDir)) throw new IOException("The manager data folder is unavailable.");
                 string folder = Path.Combine(dataDir, "Crash Reports");
                 Directory.CreateDirectory(folder);
                 var text = new StringBuilder();
-                text.AppendLine("GORILLA MOD MANAGER 26 - CRASH DETAILS ADD-ON");
+                text.AppendLine("MYKELOVVES MOD MANAGER r3 - CRASH DETAILS");
                 text.AppendLine("Report generated (this PC): " + now.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture));
                 text.AppendLine("This file is saved locally only. Review personal file paths before sharing it.");
                 text.AppendLine();
@@ -148,7 +149,7 @@ namespace Gorilla.CrashDetails
                 foreach (Finding f in report.Findings.Where(f => f != null && f != finding))
                 {
                     text.AppendLine();
-                    text.AppendLine("Existing Gorilla check: " + f.Title);
+                    text.AppendLine("Manager check: " + f.Title);
                     text.AppendLine(f.Text);
                 }
                 string destination = Path.Combine(folder, "Latest crash report.txt");

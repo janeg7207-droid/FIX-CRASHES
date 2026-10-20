@@ -59,7 +59,7 @@ namespace Gorilla.CrashDetails
                 d.Explanation += " Windows recorded the failure inside " + module + ". That makes this plugin a useful suspect, but another mod, incompatible data or an earlier memory error can make a plugin fail.";
                 bool cakeHook = lower.Contains("cakehook");
                 d.NextStep = cakeHook
-                    ? "Check that CakeHook matches your exact game version. Keep CakeHook enabled for the existing mod search; test recently changed mods and other plugins through Gorilla's backup and restore controls. A CakeHook fault alone does not identify a bad mod."
+                    ? "Check that CakeHook matches your exact game version. Keep CakeHook enabled for the existing mod search; test recently changed mods and other plugins through the manager's backup and restore controls. A CakeHook fault alone does not identify a bad mod."
                     : "Check that " + module + " supports your exact game version. Use the existing plugin-off control to test without it, then repeat with it restored. If the same crash follows the plugin repeatedly, that strengthens the evidence; do not delete it.";
             }
             else if (IsGraphicsModule(lower) || IsGraphicsCode(code))
@@ -67,7 +67,7 @@ namespace Gorilla.CrashDetails
                 d.Summary = "Graphics-related failure recorded";
                 d.Confidence = "Graphics involvement is a clue; a driver, graphics setting, overlay or modded asset may be responsible.";
                 d.Explanation += " The recorded component or error points to the graphics path. This does not prove that the graphics driver itself is defective.";
-                d.NextStep = "Repeat the failing scene with a known-compatible graphics driver and overlays disabled. Reduce graphics settings or VRAM use, then compare with the same modded textures/arena disabled through Gorilla. Restore each change separately to identify which one matters.";
+                d.NextStep = "Repeat the failing scene with a known-compatible graphics driver and overlays disabled. Reduce graphics settings or VRAM use, then compare with the same modded textures/arena disabled through the manager. Restore each change separately to identify which one matters.";
             }
             else if (code == "0xC0000017" || code == "0x8007000E")
             {

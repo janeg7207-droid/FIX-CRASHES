@@ -64,7 +64,7 @@ class ReleasePackageTests(unittest.TestCase):
             verify_release(self.path)
 
     def test_missing_dependency_is_rejected(self):
-        self.files.pop("GorillaCrashDetails.dll")
+        self.files.pop("MykelovvesDiagnostics.dll")
         self.write()
         with self.assertRaises(ValueError):
             verify_release(self.path)

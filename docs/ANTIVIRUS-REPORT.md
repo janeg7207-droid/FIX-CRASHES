@@ -1,4 +1,4 @@
-# Antivirus report: original download withdrawn, r2 unverified
+# Antivirus report: flagged download withdrawn, current builds unverified
 
 Microsoft Defender reported `Trojan:Win32/Ulthar.A!ml` for
 `Gorilla CAK Inspector.exe` inside the application ZIP on October 20, 2026.
@@ -44,6 +44,17 @@ the network proxy returned `CONNECT tunnel failed, response 403` for
 signature scan was reported as a passing malware check. Microsoft Defender is
 unavailable in this Linux environment. See the actual package's
 `ANTIVIRUS-STATUS.txt`; neither scanner has cleared the r2 package here.
+
+## r3 branding and file comparisons
+
+The user subsequently requested the name **Mykelovves Mod Manager** and
+comparisons showing matching files and potential crash leads. The main launch
+file is now `Mykelovves Mod Manager.exe`; its title/header and the diagnostic
+DLL use that branding. Internal original assembly identity, author credits,
+resources, data paths and trusted update source remain. This requested product
+rename does not establish antivirus safety and is not a replacement or renamed
+copy of the removed standalone Inspector. The exact manifest and blocked-hash
+checks remain in place. Antivirus clearance for r3 is also **unverified**.
 
 ## Established facts and limits
 

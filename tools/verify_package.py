@@ -4,7 +4,7 @@ from pathlib import PurePosixPath
 import zipfile
 
 EXPECTED_FILES = {
-    "Gorilla Mod Manager 26.exe", "GorillaCrashDetails.dll", "GorillaReader.dll",
+    "Mykelovves Mod Manager.exe", "MykelovvesDiagnostics.dll", "GorillaReader.dll",
     "GorillaReader.runtimeconfig.json", "README.original.txt", "README.txt",
     "THIRD-PARTY-NOTICES.txt", "ANTIVIRUS-STATUS.txt", "VALIDATION.txt", "SHA256SUMS.txt",
 }

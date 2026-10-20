@@ -1,3 +1,2 @@
-6f197bb51838ea3d603763fa86c8f65099b26db0a9a611bb4e4ff6880c572472  Gorilla-Mod-Manager-26-v2.0.4-Integrated-CAK-Checks-r2.zip
-dea8ef6b0945ec0597e25d87f42e582ab7ce1afe9d7fb9c83e33ba12caf76ebe  Gorilla-Integrated-CAK-Checks-r2-Source.zip
-cc44b054867ae944705282747a50092cc406e2eab1aa34839e69655f91438462  ANTIVIRUS-STATUS.txt
+82825637b809ea7f47b17cb4a81e875ab7ace491d551fbb223144840cfed9296  Mykelovves-Mod-Manager-r3-Source.zip
+15bc1f43238856452f25de061801639dc33d38af96961a6b4d32cd6747e86b74  Mykelovves-Mod-Manager-r3.zip
