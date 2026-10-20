@@ -1,6 +1,11 @@
 GORILLA MOD MANAGER 26 v2.0.4 - CRASH AND CAK CHECKS ADD-ON v1.1
 ===========================================================
 
+DOWNLOAD WITHDRAWN: Microsoft Defender reported Trojan:Win32/Ulthar.A!ml in
+Gorilla CAK Inspector.exe. Do not run or allow the flagged build. The instructions
+below describe its intended workflow and are suspended pending security review.
+See ANTIVIRUS-REPORT.md in the repository. No clean replacement is validated.
+
 This is a modified copy of the supplied v2.0.4 package, not an official update.
 The original mod manager features, original artwork, and original reader files
 are retained. Original author: Mr Creeper HD. See README.original.txt.

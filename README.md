@@ -4,16 +4,19 @@ Adds clearer WWE 2K26 crash explanations to the supplied Gorilla Mod Manager 26
 v2.0.4 while retaining the original features and controls. This is an unofficial
 add-on to the uploaded binary, not a replacement mod manager or an official release.
 
-## Downloads
+## Downloads paused: antivirus report under investigation
 
-- [Windows application ZIP](downloads/Gorilla-Mod-Manager-26-v2.0.4-Crash-and-CAK-Checks.zip)
-- [Rebuildable source ZIP, including the original input package](downloads/Gorilla-Crash-and-CAK-Checks-Source.zip)
-- [Download checksums](downloads/SHA256SUMS.txt)
+Microsoft Defender reported **Trojan:Win32/Ulthar.A!ml** for the bundled
+**Gorilla CAK Inspector.exe**. The downloadable application and binary-containing
+source ZIP have been withdrawn from the current branch pending investigation.
+Do not run or allow the previously downloaded build, add antivirus exclusions,
+or obtain it from an older commit as a workaround.
 
-Extract the application ZIP into a new folder and keep all files together. Use
-**Fix My Game > Check Again** for installed mods, or **Gorilla CAK Inspector.exe**
-to select a CAK before installing it. The package passed 54 automated checks;
-Windows UI and actual game-crash testing remain unverified.
+The 54 automated checks were functional and structural checks, **not an antivirus
+scan or evidence that the package is malware-free**. No clean replacement has
+been validated. Source code remains available for review. See
+[the investigation record](docs/ANTIVIRUS-REPORT.md) for hashes, established facts
+and current limits.
 
 The original Windows app targets .NET Framework 4.8. Its `GorillaReader.dll`
 helper targets .NET 10. The upload contains these compiled files and a README;
@@ -54,9 +57,10 @@ Install Python 3.11+ and the .NET 8 SDK. From this checkout run:
 python tools/build.py "/path/to/Gorilla Mod Manager 26 v2.0.4.zip"
 ```
 
-Use `--dotnet /path/to/dotnet` when the SDK is outside PATH. The source ZIP includes
-the supplied original as `original-upload.zip` so it can be rebuilt with the same
-command. NuGet access is needed on the first build. Dependencies and the ILVerify
+Use `--dotnet /path/to/dotnet` when the SDK is outside PATH. A local copy of the
+original user-supplied ZIP is required; binary-containing archives are currently
+withdrawn. Builds are for investigation, not cleared releases. NuGet access is
+needed on the first build. Dependencies and the ILVerify
 tool are pinned; NuGet lock files are enforced. TLS, NuGet verification and the
 original binary hashes are preserved.
 
@@ -84,10 +88,9 @@ IL and diagnostic checks passed here; actual Windows startup, the new card's
 layout, CAK Inspector window/drag-and-drop, Event Viewer access and a real
 game-crash workflow remain untested.
 
-On Windows, extract into a new folder, retain the original package, start the
-modified app, reproduce a failure and open **Fix My Game > Check Again**. Check
-that the added card and its **Open folder** link work and that a familiar existing
-mod/restore action still works. The add-on DLL must stay beside the executable.
+Windows runtime validation must wait until the antivirus detection has been
+resolved through a suitable security review. Do not restore or allow the flagged
+build to carry out the previously described UI/game tests.
 
 This patch accepts only the exact uploaded v2.0.4 executable. Later official
 updates may replace its report hook and require a separately reviewed patch.
