@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <GorillaAssembly Condition="'$(GorillaAssembly)' == ''">$(MSBuildThisFileDirectory)../build/original/Gorilla Mod Manager 26.exe</GorillaAssembly>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../src/CrashDetails/*.cs" Link="%(Filename)%(Extension)" />
+    <Reference Include="GorillaModManager">
+      <HintPath>$(MSBuildThisFileDirectory)../build/reference/GorillaModManager.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <Target Name="PrepareOriginalAssemblyReference" BeforeTargets="ResolveAssemblyReferences">
+    <MakeDir Directories="$(MSBuildThisFileDirectory)../build/reference" />
+    <Copy SourceFiles="$(GorillaAssembly)" DestinationFiles="$(MSBuildThisFileDirectory)../build/reference/GorillaModManager.dll" />
+  </Target>
+</Project>
