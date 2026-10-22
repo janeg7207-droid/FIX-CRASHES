@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading;
 
 namespace Gorilla.CrashDetails
 {
@@ -55,6 +56,7 @@ namespace Gorilla.CrashDetails
     {
         public string Sha256;
         public List<string> Names = new List<string>();
+        public List<string> Paths = new List<string>();
     }
 
     public sealed class CakComparisonResult
@@ -85,30 +87,35 @@ namespace Gorilla.CrashDetails
         public const int MaxIndexedEntries = 200000;
         public const int MaxSharedGroups = 1000;
 
-        public static CakComparisonResult Compare(IEnumerable<CakInspection> inspected, long byteBudget = DefaultByteBudget, int timeBudgetMilliseconds = 15000)
+        public static CakComparisonResult Compare(IEnumerable<CakInspection> inspected, long byteBudget = DefaultByteBudget, int timeBudgetMilliseconds = 15000,
+            long maxArchiveBytes = 64L * 1024 * 1024, long maxPayloadBytes = 32L * 1024 * 1024, CancellationToken cancellationToken = default)
         {
             var result = new CakComparisonResult();
-            var budget = new HashBudget(result, byteBudget, timeBudgetMilliseconds);
+            cancellationToken.ThrowIfCancellationRequested();
+            var budget = new HashBudget(result, byteBudget, timeBudgetMilliseconds, cancellationToken);
             var files = inspected.Where(f => f != null).ToList();
-            var archiveHashes = new Dictionary<string, List<string>>();
+            var archiveHashes = new Dictionary<string, List<CakInspection>>();
             foreach (var sized in files.Where(f => f.Bytes > 0).GroupBy(f => f.Bytes).Where(g => g.Count() > 1))
                 foreach (CakInspection file in sized)
                 {
+                    cancellationToken.ThrowIfCancellationRequested();
                     string reason;
-                    string hash = budget.Read(file, 0, (ulong)file.Bytes, 64L * 1024 * 1024, out reason);
+                    string hash = budget.Read(file, 0, (ulong)file.Bytes, maxArchiveBytes, out reason);
                     if (hash == null) { result.Limited = true; continue; }
-                    List<string> names;
-                    if (!archiveHashes.TryGetValue(hash, out names)) archiveHashes.Add(hash, names = new List<string>());
-                    names.Add(Path.GetFileName(file.FilePath));
+                    List<CakInspection> copies;
+                    if (!archiveHashes.TryGetValue(hash, out copies)) archiveHashes.Add(hash, copies = new List<CakInspection>());
+                    copies.Add(file);
                 }
             foreach (var pair in archiveHashes.Where(p => p.Value.Count > 1))
-                result.IdenticalArchives.Add(new CakArchiveCopies { Sha256 = pair.Key, Names = pair.Value });
+                result.IdenticalArchives.Add(new CakArchiveCopies { Sha256 = pair.Key,
+                    Names = pair.Value.Select(f => Path.GetFileName(f.FilePath)).ToList(), Paths = pair.Value.Select(f => f.FilePath).ToList() });
 
             var indexed = new Dictionary<ulong, List<CakFileCopy>>();
             int entries = 0;
             foreach (CakInspection file in files.Where(f => f.TablesRead && !f.HasErrors))
                 foreach (CakAsset asset in file.Assets)
                 {
+                    cancellationToken.ThrowIfCancellationRequested();
                     if (entries >= MaxIndexedEntries) { result.Limited = true; break; }
                     entries++;
                     List<CakFileCopy> copies;
@@ -120,13 +127,14 @@ namespace Gorilla.CrashDetails
             if (shared.Count > MaxSharedGroups) { result.Limited = true; shared.RemoveAt(MaxSharedGroups); }
             foreach (var pair in shared)
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 var group = new CakSharedFile { AssetId = pair.Key, Copies = pair.Value };
                 foreach (CakFileCopy copy in group.Copies)
                 {
                     if (copy.Archive.External) { copy.UnverifiedReason = "external-reference archive; payload is not stored in this CAK"; result.Limited = true; continue; }
                     if (!group.SamePath) { copy.UnverifiedReason = "the shared ID has different internal path names"; result.Limited = true; continue; }
                     string reason;
-                    copy.Sha256 = budget.Read(copy.Archive, copy.Asset.StoredOffset, copy.Asset.StoredLength, 32L * 1024 * 1024, out reason);
+                    copy.Sha256 = budget.Read(copy.Archive, copy.Asset.StoredOffset, copy.Asset.StoredLength, maxPayloadBytes, out reason);
                     copy.UnverifiedReason = reason;
                     if (copy.Sha256 == null) result.Limited = true;
                 }
@@ -140,23 +148,25 @@ namespace Gorilla.CrashDetails
             private readonly CakComparisonResult result;
             private readonly long bytes;
             private readonly int milliseconds;
+            private readonly CancellationToken cancellationToken;
             private readonly Stopwatch clock = Stopwatch.StartNew();
             private readonly Dictionary<string, string> cache = new Dictionary<string, string>();
 
-            public HashBudget(CakComparisonResult result, long bytes, int milliseconds)
-            { this.result = result; this.bytes = Math.Max(0, bytes); this.milliseconds = Math.Max(0, milliseconds); }
+            public HashBudget(CakComparisonResult result, long bytes, int milliseconds, CancellationToken cancellationToken)
+            { this.result = result; this.bytes = Math.Max(0, bytes); this.milliseconds = Math.Max(0, milliseconds); this.cancellationToken = cancellationToken; }
 
             public string Read(CakInspection file, ulong offset, ulong length, long perFileLimit, out string reason)
             {
                 reason = null;
                 try
                 {
+                    cancellationToken.ThrowIfCancellationRequested();
                     if (!Unchanged(file)) { reason = "archive changed since its tables were read; scan again after copying/baking finishes"; return null; }
                     if (offset > (ulong)file.Bytes || length > (ulong)file.Bytes - offset) { reason = "range outside the archive"; return null; }
                     string key = file.FilePath + "\0" + offset + ":" + length;
                     string cached;
                     if (cache.TryGetValue(key, out cached)) return cached;
-                    if (length > (ulong)perFileLimit || length > (ulong)Math.Max(0, bytes - result.BytesRead) || clock.ElapsedMilliseconds >= milliseconds)
+                    if (length > (ulong)Math.Max(0, perFileLimit) || length > (ulong)Math.Max(0, bytes - result.BytesRead) || clock.ElapsedMilliseconds >= milliseconds)
                     { reason = "byte/time comparison limit reached; no equality is claimed"; return null; }
                     using (var stream = new FileStream(file.FilePath, FileMode.Open, FileAccess.Read, FileShare.Read))
                     using (var sha = SHA256.Create())
@@ -166,6 +176,7 @@ namespace Gorilla.CrashDetails
                         byte[] buffer = new byte[65536];
                         while (remaining > 0)
                         {
+                            cancellationToken.ThrowIfCancellationRequested();
                             if (clock.ElapsedMilliseconds >= milliseconds) { reason = "time comparison limit reached; no equality is claimed"; return null; }
                             int read = stream.Read(buffer, 0, (int)Math.Min((ulong)buffer.Length, remaining));
                             if (read == 0) { reason = "payload ended during comparison"; return null; }

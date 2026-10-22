@@ -72,7 +72,7 @@ def main():
     run(dotnet, ROOT / "tests/bin/Release/net8.0/CrashDetails.Tests.dll")
     run(sys.executable, "-m", "unittest", "discover", "-s", "tests", "-p", "test_package.py", "-v")
 
-    output = ROOT / "artifacts/Mykelovves Mod Manager r3"
+    output = ROOT / "artifacts/Mykelovves Mod Manager r4"
     output.mkdir(parents=True, exist_ok=True)
     add_on = ROOT / "src/CrashDetails/bin/Release/net48/MykelovvesDiagnostics.dll"
     patched = output / "Mykelovves Mod Manager.exe"
@@ -121,7 +121,7 @@ def main():
     hashes = {name: hashlib.sha256((output / name).read_bytes()).hexdigest() for name in sorted(EXPECTED_FILES - {"SHA256SUMS.txt"})}
     (output / "SHA256SUMS.txt").write_text("".join(f"{digest}  {name}\n" for name, digest in hashes.items()), encoding="utf-8")
 
-    release_zip = ROOT / "artifacts/Mykelovves-Mod-Manager-r3.zip"
+    release_zip = ROOT / "artifacts/Mykelovves-Mod-Manager-r4.zip"
     with zipfile.ZipFile(release_zip, "w", compression=zipfile.ZIP_DEFLATED) as archive:
         for name in list(hashes) + ["SHA256SUMS.txt"]:
             archive.write(output / name, name)
@@ -131,7 +131,7 @@ def main():
         archive_scan = run(args.clamscan, "--database=" + str(args.clamav_database.resolve()), str(release_zip))
     release_zip.with_suffix(".antivirus.txt").write_text(scan_status + "\n" + archive_scan, encoding="utf-8")
 
-    source_output = ROOT / "artifacts/Mykelovves-Mod-Manager-r3-Source.zip"
+    source_output = ROOT / "artifacts/Mykelovves-Mod-Manager-r4-Source.zip"
     with zipfile.ZipFile(source_output, "w", compression=zipfile.ZIP_DEFLATED) as archive:
         paths = [ROOT / x for x in ("README.md", ".gitignore", "global.json", "Directory.Build.props", ".config/dotnet-tools.json")]
         for folder in ("src", "tests", "tools", "docs"):

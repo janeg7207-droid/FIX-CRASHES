@@ -140,7 +140,7 @@ namespace Gorilla.CrashDetails
                 string folder = Path.Combine(dataDir, "Crash Reports");
                 Directory.CreateDirectory(folder);
                 var text = new StringBuilder();
-                text.AppendLine("MYKELOVVES MOD MANAGER r3 - CRASH DETAILS");
+                text.AppendLine("MYKELOVVES MOD MANAGER r4 - CRASH DETAILS");
                 text.AppendLine("Report generated (this PC): " + now.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture));
                 text.AppendLine("This file is saved locally only. Review personal file paths before sharing it.");
                 text.AppendLine();

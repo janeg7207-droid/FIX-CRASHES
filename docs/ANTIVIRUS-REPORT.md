@@ -56,6 +56,16 @@ rename does not establish antivirus safety and is not a replacement or renamed
 copy of the removed standalone Inspector. The exact manifest and blocked-hash
 checks remain in place. Antivirus clearance for r3 is also **unverified**.
 
+## r4 duplicate-files tab
+
+r4 adds a page inside the existing manager for CAK duplicate comparisons,
+enabled/disabled labels, search, character/roster filtering, cancellable larger-file
+hashing and local text export. It includes Parsec/character-selection investigation
+guidance without asserting a crash cause. No standalone executable is added.
+The original blocked Inspector hash and exact package manifest are still enforced.
+No new antivirus scan or Microsoft review has completed; r4 clearance remains
+**unverified**. The functional test results are not malware-scan results.
+
 ## Established facts and limits
 
 - The archive's integrity check passes and its Inspector executable matches the

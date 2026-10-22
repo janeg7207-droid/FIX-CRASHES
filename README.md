@@ -1,15 +1,60 @@
 # Mykelovves Mod Manager
 
-Mykelovves Mod Manager r3 adds same-file comparisons and clearer crash reports
-to the supplied Gorilla Mod Manager 26 v2.0.4. The window title, header, launch
+Mykelovves Mod Manager r4 adds same-file comparisons and clearer crash reports
+to the supplied Gorilla Mod Manager 26 v2.0.4. It also includes a dedicated
+Duplicate files tab and character-selection/Parsec troubleshooting.
+The window title, header, launch
 executable and downloads use the requested name. Original mod management,
 TRIBUTE, Discovery, backup, restore, mod search and update code are retained.
 This is an unofficial modification; original author: Mr Creeper HD.
 
-- [Download r3 application ZIP — antivirus clearance unverified](downloads/Mykelovves-Mod-Manager-r3.zip)
-- [Download r3 code-only source ZIP](downloads/Mykelovves-Mod-Manager-r3-Source.zip)
+- [Download r4 application ZIP — antivirus clearance unverified](downloads/Mykelovves-Mod-Manager-r4.zip)
+- [Download r4 code-only source ZIP](downloads/Mykelovves-Mod-Manager-r4-Source.zip)
 - [Actual antivirus status](downloads/ANTIVIRUS-STATUS.txt)
 - [Download checksums](downloads/SHA256SUMS.txt)
+
+## Duplicate files tab
+
+Select **Duplicate files** in the left navigation. The first visit scans enabled
+CAKs automatically; **Scan CAKs** runs it again. Scanning runs in the background,
+and **Cancel**, leaving the tab or closing the window cancels it without publishing
+partial matches. Existing results remain labelled as the previous completed scan.
+
+- Filter identical CAKs, identical stored files, different versions, unverified
+  entries or file problems. Search internal paths, archive names and full locations.
+- **Character/roster paths** focuses on internal `Characters/` and `Roster/` paths.
+- **Include disabled CAKs** adds renamed disabled files in the mods folder and
+  CAKs in the configured Mods off store. Every location is marked enabled/disabled;
+  an inactive copy is not treated as an active conflict. Removed mods, old stores,
+  subfolders, incomplete downloads and manager temporary files are excluded.
+- **Compare large CAKs (slower)** raises hash limits to 8 GiB / 60 seconds overall,
+  4 GiB per whole CAK and 256 MiB per payload. Quick mode keeps the previous limits.
+- Select a row for hashes, every exact location and caveats. **Scan notes** shows
+  limits and errors. **Save full report** saves all results, including filtered-out
+  rows, to a user-chosen local text file. Review personal paths before sharing.
+
+The tab shows all retained shared-file groups (up to 1,000), whole-CAK groups
+and inspection notes, with the same 256-archive and 200,000-entry indexing caps.
+It scans CAK containers and their supported internal
+tables, rather than recursively searching the PC for arbitrary duplicate files.
+
+## Character selection with Parsec
+
+A crash while guests select characters does not prove that Parsec caused it.
+Expand **Crashes while friends pick characters through Parsec** in the duplicate
+tab for a controlled comparison: the same characters, attires, arena and selection
+order locally with Parsec closed, then connected with only the host selecting,
+then with one guest controller at a time. If it also fails locally, compare stock
+characters and the implicated character mods through existing backup/mod-search
+controls. If it only fails with guest input, compare input arrangements and check
+Parsec/controller-driver versions from official sources, changing one thing at a time.
+
+After each crash, use **Fix My Game > Check Again** and compare the Windows event
+time, module and exception code. A recorded Parsec-named DLL receives specific
+comparison guidance, without declaring Parsec or a mod the root cause. The manager
+does not infer which characters were selected or whether Parsec was running at the
+crash from a duplicate scan. No crash report or personal CAKs were supplied for
+this incident, so its actual cause has not been diagnosed here.
 
 ## Same files and crash investigation
 
@@ -92,7 +137,8 @@ access. Original input hashes and normal TLS/package verification are enforced.
 
 The build compiles the add-on and patcher, runs diagnostic/integration and
 package regression tests, then patches `Doctor.Examine`'s two return paths and
-the window constructor's return. It verifies that the other 3,954 method bodies,
+the window constructor's return (branding and native duplicate-page registration).
+It verifies that the other 3,954 method bodies,
 all three original embedded resources and internal assembly identity remain
 unchanged. Only the managed title/product attributes are rebranded; original
 credits and the trusted update source are retained. Internal names and saved
@@ -100,11 +146,12 @@ data paths stay compatible with the original WPF resources and settings.
 ILVerify checks both changed methods and every method in the add-on against
 .NET Framework 4.8 reference assemblies.
 
-The 74 diagnostic tests use actual model types from the supplied executable.
+The 91 diagnostic tests use actual model types from the supplied executable.
 They cover existing fix delegates and suspects, crash evidence, local reports,
 unavailable logs, write failures, supported CAK layouts, malformed entries,
 read-only inspection, all duplicate owners, changed files, comparison budgets,
-loader-message freshness and cautious crash conclusions. Seven package tests
+loader-message freshness, disabled-file activity, larger-file mode, cancellation,
+search/category filters and cautious crash conclusions. Seven package tests
 enforce the exact file list, blocked-file hashes, dependencies and checksums.
 The code-only source ZIP rejects binaries and nested input packages.
 
@@ -121,7 +168,8 @@ ignored `build/` paths. The uploaded executable is never overwritten.
 The original desktop app and add-on require .NET Framework 4.8; the unchanged
 `GorillaReader.dll` helper targets .NET 10. This Linux environment cannot run the
 Windows interface, Defender or WWE 2K26. Actual startup, header layout, Event
-Viewer access and a real game-crash workflow still require Windows validation.
+Viewer access, the duplicate tab's navigation/layout and a real game-crash workflow
+still require Windows validation.
 Official updates may replace the added hooks and branding.
 
 CAK format research: [Nenkai/Bakery](https://github.com/Nenkai/Bakery), revision

@@ -62,6 +62,14 @@ namespace Gorilla.CrashDetails
                     ? "Check that CakeHook matches your exact game version. Keep CakeHook enabled for the existing mod search; test recently changed mods and other plugins through the manager's backup and restore controls. A CakeHook fault alone does not identify a bad mod."
                     : "Check that " + module + " supports your exact game version. Use the existing plugin-off control to test without it, then repeat with it restored. If the same crash follows the plugin repeatedly, that strengthens the evidence; do not delete it.";
             }
+            else if (lower.StartsWith("parsec", StringComparison.Ordinal) && lower.EndsWith(".dll", StringComparison.Ordinal))
+            {
+                d.Summary = "Fault recorded in a Parsec-named component";
+                d.Confidence = "The component name is recorded; Parsec or a particular mod is not established as the root cause.";
+                d.Explanation += " The recorded DLL name starts with Parsec. This is a component clue, not proof that remote input or Parsec itself caused the failure.";
+                d.NextStep = "Repeat the same characters, attires and selection order locally with Parsec fully closed, then with Parsec connected while only the host selects, then with one guest controller at a time. " +
+                    "Use Duplicate files > Character/roster paths and the Parsec character-selection checks. If it crashes locally too, compare the named character mods through the existing backup and mod-search controls.";
+            }
             else if (IsGraphicsModule(lower) || IsGraphicsCode(code))
             {
                 d.Summary = "Graphics-related failure recorded";

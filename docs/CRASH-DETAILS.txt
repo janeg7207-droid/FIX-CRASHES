@@ -1,4 +1,4 @@
-MYKELOVVES MOD MANAGER r3
+MYKELOVVES MOD MANAGER r4
 ========================
 Same-file comparisons, CAK inspection and crash investigation
 
@@ -13,7 +13,7 @@ SECURITY STATUS
 ---------------
 The earlier standalone Gorilla CAK Inspector.exe was flagged by Microsoft
 Defender as Trojan:Win32/Ulthar.A!ml. That program and its project were removed
-in r2; r3 keeps them excluded. The main manager's requested name change does
+in r2; r4 keeps them excluded. The main manager's requested name change does
 not reintroduce or replace that standalone program.
 This package has NOT received antivirus clearance or a Microsoft false-positive
 verdict. Read ANTIVIRUS-STATUS.txt. Keep antivirus protection enabled and leave
@@ -31,6 +31,44 @@ USE THE CHECKS
    and files outside that folder are excluded from this automatic scan.
 6. Read the crash explanation, SAME FILES AND CAK INSPECTION, shared-file cards
    and CRASH INVESTIGATION. OPEN FOLDER on the report cards opens local reports.
+
+DUPLICATE FILES TAB
+-------------------
+Select DUPLICATE FILES in the left navigation. The first visit scans enabled
+CAKs automatically. SCAN CAKS repeats it; CANCEL or leaving the tab cancels
+without publishing partial matches. Scanning happens in the background.
+Use the category, search and CHARACTER/ROSTER PATHS filters. Select a result
+for hashes, exact locations and enabled/disabled labels. SCAN NOTES shows limits.
+SAVE FULL REPORT saves all results to a chosen text file, regardless of filters.
+
+INCLUDE DISABLED CAKS adds renamed disabled CAKs in the mods folder and top-level
+CAKs in the configured Mods off folder. An inactive copy is not an active conflict.
+Removed mods, old stores, subfolders, incomplete files and manager temporary files
+are excluded. This tab scans CAKs and their internal files, not every file on the PC.
+
+COMPARE LARGE CAKS raises hashing limits to 8 GiB / 60 seconds overall, 4 GiB per
+whole CAK and 256 MiB per payload. Quick mode retains 256 MiB / 15 seconds,
+64 MiB per whole CAK and 32 MiB per payload. Both modes retain the 256-archive,
+200,000-entry and 1,000-shared-group caps. The tab displays every retained group;
+Fix My Game still displays the first 12 shared-file cards. Incomplete comparisons
+remain unverified. Nothing is automatically disabled or deleted.
+
+PARSEC / CHARACTER-SELECTION CRASHES
+------------------------------------
+Expand CRASHES WHILE FRIENDS PICK CHARACTERS THROUGH PARSEC in the duplicate tab.
+A crash during Parsec use is not proof that Parsec caused it. Record the exact
+characters, attires, arena, selection order and time. Repeat the same selection
+locally with Parsec fully closed, then connected with only the host selecting,
+then with one guest controller at a time. Keep the characters and order constant.
+If it crashes locally too, compare a stock character and the implicated character
+CAKs using existing backup/mod-search controls. If only guest input reproduces it,
+compare input arrangements and check Parsec/controller-driver versions from their
+official sources. Change one thing at a time, then repeat.
+After each failure, FIX MY GAME > CHECK AGAIN shows the Windows event time,
+component and code when available. A Parsec-named DLL is a clue, not a root-cause
+verdict. The manager does not automatically identify selected characters or prove
+that Parsec was running during a historical event. This user's actual incident
+has not been diagnosed without the crash evidence and a reproducible comparison.
 
 WHAT THE RESULTS MEAN
 ---------------------
@@ -98,7 +136,7 @@ REQUIREMENTS AND VALIDATION
 - VALIDATION.txt contains build, diagnostic, package and IL verification output.
   These checks are not antivirus scans or Windows UI/game tests.
 - Linux cannot run Microsoft Defender or validate actual Windows startup, the
-  new header layout or a real game crash. Those checks stay unverified.
+  new header or duplicate-tab layout/navigation, or a real game crash. Those checks stay unverified.
 - Your particular CAK has not been supplied or examined here.
 - Only the exact original uploaded v2.0.4 executable is accepted by the builder.
 

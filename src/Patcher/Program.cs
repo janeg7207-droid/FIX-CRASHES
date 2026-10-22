@@ -52,6 +52,9 @@ var shell = assembly.MainModule.Types.Single(t => t.FullName == "Gorilla.Manager
 var constructor = shell.Methods.Single(m => m.IsConstructor && !m.IsStatic && !m.HasParameters);
 var brand = assembly.MainModule.ImportReference(addOn.MainModule.Types.Single(t => t.FullName == "Gorilla.CrashDetails.Branding")
     .Methods.Single(m => m.Name == "Apply"));
+var attach = assembly.MainModule.ImportReference(addOn.MainModule.Types.Single(t => t.FullName == "Gorilla.CrashDetails.DuplicatesPage")
+    .Methods.Single(m => m.Name == "Attach"));
+var pages = shell.Fields.Single(f => f.Name == "_pages");
 var constructorReturns = constructor.Body.Instructions.Where(i => i.OpCode == OpCodes.Ret).ToList();
 if (constructorReturns.Count != 1) throw new InvalidOperationException("Unexpected shell constructor; refusing to patch.");
 constructor.Body.SimplifyMacros();
@@ -61,7 +64,14 @@ shellEnd.OpCode = OpCodes.Ldarg_0;
 shellEnd.Operand = null;
 var brandingCall = Instruction.Create(OpCodes.Call, brand);
 shellIl.InsertAfter(shellEnd, brandingCall);
-shellIl.InsertAfter(brandingCall, Instruction.Create(OpCodes.Ret));
+var shellTail = brandingCall;
+foreach (var instruction in new[] {
+    Instruction.Create(OpCodes.Ldarg_0), Instruction.Create(OpCodes.Ldarg_0), Instruction.Create(OpCodes.Ldfld, pages),
+    Instruction.Create(OpCodes.Call, attach), Instruction.Create(OpCodes.Ret) })
+{
+    shellIl.InsertAfter(shellTail, instruction); shellTail = instruction;
+}
+constructor.Body.MaxStackSize = Math.Max(constructor.Body.MaxStackSize, 2);
 constructor.Body.OptimizeMacros();
 foreach (var attribute in assembly.CustomAttributes.Where(a => a.AttributeType.FullName is
     "System.Reflection.AssemblyTitleAttribute" or "System.Reflection.AssemblyProductAttribute"))
@@ -97,7 +107,9 @@ if (hook.Body.Instructions.Count(i => i.OpCode == OpCodes.Call && i.Operand is M
 var branded = AllTypes(patched.MainModule.Types).SelectMany(t => t.Methods).Single(m => m.FullName == constructor.FullName);
 if (branded.Body.Instructions.Count(i => i.OpCode == OpCodes.Call && i.Operand is MethodReference m && m.FullName == brand.FullName) != 1)
     throw new Exception("The shell branding hook is missing or duplicated.");
-Console.WriteLine($"Verified: {unchanged} method bodies unchanged; Doctor.Examine extended at its {returns.Count} returns and Shell constructor branded once.");
+if (branded.Body.Instructions.Count(i => i.OpCode == OpCodes.Call && i.Operand is MethodReference m && m.FullName == attach.FullName) != 1)
+    throw new Exception("The duplicate-files page hook is missing or duplicated.");
+Console.WriteLine($"Verified: {unchanged} method bodies unchanged; Doctor.Examine extended at its {returns.Count} returns; Shell constructor branded and duplicate-files page attached once.");
 Console.WriteLine($"Verified: all {original.MainModule.Resources.Count} original resources and the assembly identity are unchanged.");
 
 static IEnumerable<TypeDefinition> AllTypes(IEnumerable<TypeDefinition> types)

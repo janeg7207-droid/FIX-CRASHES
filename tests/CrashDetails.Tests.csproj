@@ -7,7 +7,7 @@
     <GorillaAssembly Condition="'$(GorillaAssembly)' == ''">$(MSBuildThisFileDirectory)../build/original/Gorilla Mod Manager 26.exe</GorillaAssembly>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="../src/CrashDetails/*.cs" Exclude="../src/CrashDetails/Branding.cs" Link="%(Filename)%(Extension)" />
+    <Compile Include="../src/CrashDetails/*.cs" Exclude="../src/CrashDetails/Branding.cs;../src/CrashDetails/DuplicatesPage.cs" Link="%(Filename)%(Extension)" />
     <Reference Include="GorillaModManager">
       <HintPath>$(MSBuildThisFileDirectory)../build/reference/GorillaModManager.dll</HintPath>
     </Reference>

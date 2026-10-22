@@ -16,7 +16,7 @@ namespace Gorilla.CrashDetails
             // before this hook runs. Replace its wordmark with accessible text.
             if (window.Content is DependencyObject content) Visit(content);
             if (window.FindName("VersionText") is TextBlock version)
-                version.Text += " · Mykelovves r3";
+                version.Text += " · Mykelovves r4";
         }
 
         private static void Visit(DependencyObject element)

@@ -188,6 +188,7 @@ try
     });
     CakTests.Run(temp, Test);
     CakComparisonTests.Run(temp, Test);
+    DuplicateScanTests.Run(temp, Test);
 }
 finally { Directory.Delete(temp, true); }
 Console.WriteLine($"{passed} passed, {failed} failed; {passed + failed} tests executed.");
